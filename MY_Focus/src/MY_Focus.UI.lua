@@ -92,7 +92,10 @@ function D.CreateList(frame)
 		end
 		if X.UI.IS_GLASSMORPHISM then
 			hItem:Lookup('Handle_L/Handle_Compass/Image_Player'):SetSize(35, 35)
-			hItem:Lookup('Handle_L/Handle_Compass/Image_Player'):SetRelPos(2.5, -0.8)
+			-- hItem:Lookup('Handle_L/Handle_Compass/Image_Player'):SetRelPos(2.5, -0.8)
+			local fScaleX = frame.fScaleX or 1
+			local fScaleY = frame.fScaleY or 1
+			hItem:Lookup('Handle_L/Handle_Compass/Image_Player'):SetRelPos(2.5 * fScaleX, -0.8 * fScaleY)
 			hItem:FormatAllItemPos()
 		end
 		hItem:Hide()
