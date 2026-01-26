@@ -42,6 +42,7 @@ local FORCE_TYPE = (function()
 		DAO_ZONG  = 213, -- 刀宗
 		WAN_LING  = 214, -- 万灵
 		DUAN_SHI  = 215, -- 段氏
+		WU_XIANG  = 221, -- 无相
 	})
 	local res = {}
 	for k, v in X.pairs_c(FORCE_TYPE) do
@@ -74,6 +75,7 @@ local FORCE_LIST = {
 	{ dwID = FORCE_TYPE.DAO_ZONG , szUITex = 'ui\\Image\\PlayerAvatar\\daozong.dds'       , nFrame = -2, bAnimate = false }, -- 刀宗
 	{ dwID = FORCE_TYPE.WAN_LING , szUITex = 'ui\\Image\\PlayerAvatar\\wanling.tga'       , nFrame = -2, bAnimate = false }, -- 万灵
 	{ dwID = FORCE_TYPE.DUAN_SHI , szUITex = 'ui\\Image\\PlayerAvatar\\DuanShi.tga'       , nFrame = -2, bAnimate = false }, -- 段氏
+	{ dwID = FORCE_TYPE.WU_XIANG , szUITex = 'ui\\Image\\PlayerAvatar\\wuxiang.tga'       , nFrame = -2, bAnimate = false }, -- 无相
 }
 for i, v in X.ipairs_r(FORCE_LIST) do
 	if not v.dwID or not g_tStrings.tForceTitle[v.dwID] then
