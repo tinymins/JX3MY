@@ -1699,7 +1699,7 @@ function D.UpdateCharaterBuff(p, handle, tKeep)
 				local szCountdownKey = 'MY_CATACLYSM_' .. tBuff.dwID .. '_' .. tRule.szKey
 				FireUIEvent('MY_LIFEBAR_COUNTDOWN', dwCharID, 'BUFF', szCountdownKey, {
 					dwBuffID = tBuff.dwID,
-					szText = tBuff.szName,
+					szText = tRule.szDisplayName or tBuff.szName,
 					nLogicFrame = tBuff.nEndFrame,
 					col = tRule.colScreenHead or tRule.col,
 					nPriority = tItem.nPriority,
