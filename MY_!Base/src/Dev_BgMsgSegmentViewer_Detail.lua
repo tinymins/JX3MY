@@ -174,7 +174,6 @@ function D.Open(tSeg)
 		h = nH - nY - PADDING,
 		multiline = true,
 		text = szSegData,
-		enable = false,
 	})
 end
 
