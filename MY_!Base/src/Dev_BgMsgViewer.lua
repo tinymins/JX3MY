@@ -187,6 +187,20 @@ function D.Open()
 			_G[X.NSFormatString('{$NS}_BgMsgSender')].Open()
 		end,
 	})
+	-- 帮助按钮（右对齐）
+	ui:Append('WndButton', {
+		name = 'WndButton_Help',
+		x = nW - 30, y = 50, w = 20, h = 20,
+		buttonStyle = 'QUESTION',
+		tip = {
+			render = GetFormatText(_L['Blue: Outbound message'], 162, 128, 200, 255) .. GetFormatText('\n')
+				.. GetFormatText(_L['Green: Inbound message from self'], 162, 128, 255, 128) .. GetFormatText('\n')
+				.. GetFormatText(_L['Yellow: Incomplete message'], 162, 255, 255, 128) .. GetFormatText('\n')
+				.. GetFormatText(_L['White: Inbound message from others'], 162, 255, 255, 255),
+			rich = true,
+			position = X.UI.TIP_POSITION.TOP_BOTTOM,
+		},
+	})
 	-- 表格
 	ui:Append('WndTable', {
 		name = 'WndTable_History',
@@ -294,6 +308,7 @@ function D.Open()
 				title = _L['MsgID'],
 				alignHorizontal = 'left',
 				width = 200,
+				overflow = 'hidden',
 				render = function(value, record)
 					local r, g, b = D.GetRecordColor(record)
 					return GetFormatText(' ' .. tostring(value), 162, r, g, b)
@@ -335,6 +350,7 @@ function D.OnResize()
 	local ui = X.UI(frame)
 	local nW, nH = ui:ContainerSize()
 	ui:Fetch('WndTable_History'):Size(nW - 20, nH - 95)
+	ui:Fetch('WndButton_Help'):Pos(nW - 30, 50)
 end
 
 function D.Close()

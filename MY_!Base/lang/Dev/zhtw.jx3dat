@@ -24,6 +24,10 @@ return {
 	['Preview'] = '預覽',
 	['Replay'] = '重放',
 	['View Detail'] = '查看詳情',
+	['Blue: Outbound message'] = '藍色：出站消息',
+	['Green: Inbound message from self'] = '綠色：入站消息（自己發送）',
+	['Yellow: Incomplete message'] = '黃色：入站消息（未完整消息）',
+	['White: Inbound message from others'] = '白色：入站消息（他人發送）',
 
 	-- Dev_BgMsgViewer_Detail.lua
 	['BgMsgDetail'] = '背景消息詳情',
