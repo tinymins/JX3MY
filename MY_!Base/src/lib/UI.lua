@@ -2880,42 +2880,58 @@ local function SetComponentEnable(raw, bEnable)
 	if bEnabled == bEnable then
 		return
 	end
-	-- make gray
-	local txt = GetComponentElement(raw, 'TEXT')
-	if txt then
-		local r, g, b = txt:GetFontColor()
-		local ratio = bEnable and 2.2 or (1 / 2.2)
-		if math.max(r, g, b) * ratio > 255 then
-			ratio = 255 / math.max(r, g, b)
+	-- WndTable: set gray filter on header and content
+	if GetComponentType(raw) == 'WndTable' then
+		local hTotal = raw:Lookup('', '')
+		if hTotal then
+			hTotal:SetAlpha(bEnable and 255 or 128)
 		end
-		txt:SetFontColor(math.ceil(r * ratio), math.ceil(g * ratio), math.ceil(b * ratio))
-	end
-	-- make gray
-	local sha = GetComponentElement(raw, 'SHADOW')
-	if sha then
-		local r, g, b = sha:GetColorRGB()
-		local ratio = bEnable and 2.2 or (1 / 2.2)
-		if math.max(r, g, b) * ratio > 255 then
-			ratio = 255 / math.max(r, g, b)
+		local scrollX = raw:Lookup('Scroll_X')
+		if scrollX then
+			scrollX:Enable(bEnable)
 		end
-		sha:SetColorRGB(math.ceil(r * ratio), math.ceil(g * ratio), math.ceil(b * ratio))
-	end
-	-- set sub elements enable
-	local combo = GetComponentElement(raw, 'COMBO_BOX')
-	if combo then
-		combo:Enable(bEnable)
-	end
-	local slider = GetComponentElement(raw, 'SLIDER')
-	if slider then
-		slider:Enable(bEnable)
-	end
-	local edit = GetComponentElement(raw, 'EDIT')
-	if edit then
-		edit:Enable(bEnable)
-	end
-	-- set enable
-	if raw.Enable then
-		raw:Enable(bEnable)
+		local scrollY = raw:Lookup('Scroll_Y')
+		if scrollY then
+			scrollY:Enable(bEnable)
+		end
+	else
+		-- make gray
+		local txt = GetComponentElement(raw, 'TEXT')
+		if txt then
+			local r, g, b = txt:GetFontColor()
+			local ratio = bEnable and 2.2 or (1 / 2.2)
+			if math.max(r, g, b) * ratio > 255 then
+				ratio = 255 / math.max(r, g, b)
+			end
+			txt:SetFontColor(math.ceil(r * ratio), math.ceil(g * ratio), math.ceil(b * ratio))
+		end
+		-- make gray
+		local sha = GetComponentElement(raw, 'SHADOW')
+		if sha then
+			local r, g, b = sha:GetColorRGB()
+			local ratio = bEnable and 2.2 or (1 / 2.2)
+			if math.max(r, g, b) * ratio > 255 then
+				ratio = 255 / math.max(r, g, b)
+			end
+			sha:SetColorRGB(math.ceil(r * ratio), math.ceil(g * ratio), math.ceil(b * ratio))
+		end
+		-- set sub elements enable
+		local combo = GetComponentElement(raw, 'COMBO_BOX')
+		if combo then
+			combo:Enable(bEnable)
+		end
+		local slider = GetComponentElement(raw, 'SLIDER')
+		if slider then
+			slider:Enable(bEnable)
+		end
+		local edit = GetComponentElement(raw, 'EDIT')
+		if edit then
+			edit:Enable(bEnable)
+		end
+		-- set enable
+		if raw.Enable then
+			raw:Enable(bEnable)
+		end
 	end
 	SetComponentProp(raw, 'bEnable', bEnable)
 end

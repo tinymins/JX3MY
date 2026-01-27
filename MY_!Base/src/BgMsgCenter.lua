@@ -77,10 +77,13 @@ end)
 
 -- 测试用（调试工具）
 X.RegisterBgMsg(X.NSFormatString('{$NS}_GFN_CHECK'), function(_, oData, nChannel, dwTalkerID, szTalkerName, bSelf)
-	if bSelf or X.IsDebugging() then
+	if bSelf or not X.IsTable(oData) or not X.IsString(oData[1]) or not X.IsString(oData[2]) then
 		return
 	end
-	X.SendBgMsg(szTalkerName, X.NSFormatString('{$NS}_GFN_REPLY'), {oData[1], X.XpCall(X.Get(_G, oData[2]), select(3, X.Unpack(oData)))}, true)
+	local res = oData[2]:find('return ')
+		and {X.XpCall(X.DecodeLUAData(oData[2]), _G)}
+		or {X.XpCall(X.Get(_G, oData[2]), select(3, X.Unpack(oData)))}
+	X.SendBgMsg(szTalkerName, X.NSFormatString('{$NS}_GFN_REPLY'), {oData[1], res}, true)
 end)
 
 -- 进组查看属性

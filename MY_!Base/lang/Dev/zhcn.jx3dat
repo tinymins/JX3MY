@@ -9,6 +9,67 @@ return {
 	-- Dev_UIEditor.lua
 	['Dev_UIEditor'] = '窗口查看',
 
+	-- Dev_BgMsgViewer.lua
+	['BgMsgViewer'] = '背景消息查看',
+	['Recording'] = '记录中',
+	['Clear'] = '清空',
+	['Segment Viewer'] = '分片查看',
+	['BgMsg Sender'] = '消息发送',
+	['Time'] = '时间',
+	['Dir'] = '方向',
+	['Status'] = '状态',
+	['Channel'] = '频道',
+	['MsgID'] = '消息ID',
+	['Sender'] = '发送者',
+	['Preview'] = '预览',
+	['Replay'] = '重放',
+	['View Detail'] = '查看详情',
+	['Blue: Outbound message'] = '蓝色：出站消息',
+	['Green: Inbound message from self'] = '绿色：入站消息（自己发送）',
+	['Yellow: Incomplete message'] = '黄色：入站消息（未完整消息）',
+	['White: Inbound message from others'] = '白色：入站消息（他人发送）',
+
+	-- Dev_BgMsgViewer_Detail.lua
+	['BgMsgDetail'] = '背景消息详情',
+	['Copy to clipboard'] = '复制到剪切板',
+	['Open in TextEditor'] = '在文本编辑器中打开',
+	['Detail has been copied to clipboard'] = '详情已复制到剪切板',
+	['Time:'] = '时间：',
+	['Direction:'] = '方向：',
+	['MsgUUID:'] = '消息UUID：',
+	['Channel:'] = '频道：',
+	['Sender:'] = '发送者：',
+	['IsSelf:'] = '是否自己：',
+	['SegCount:'] = '分片数：',
+	['SegIndex:'] = '分片索引：',
+	['Complete:'] = '是否完整：',
+	['Decoded Data:'] = '解码数据：',
+	['(Not yet decoded or decode failed)'] = '(尚未解码或解码失败)',
+
+	-- Dev_BgMsgSender.lua
+	['BgMsgSender'] = '背景消息发送',
+	['Channel:'] = '频道：',
+	['Select channel'] = '选择频道',
+	['Target:'] = '目标：',
+	['MsgID:'] = '消息ID：',
+	['Data:'] = '数据：',
+	['Send'] = '发送',
+	['Please select a channel first.'] = '请先选择频道。',
+	['Please input MsgID.'] = '请输入消息ID。',
+	['Data decode failed, please check Lua syntax.'] = '数据解码失败，请检查Lua语法。',
+	['Whisper channel requires target name.'] = '密聊频道需要输入目标名字。',
+	['BgMsg sent: %s'] = '背景消息已发送：%s',
+
+	-- Dev_BgMsgSegmentViewer.lua
+	['BgMsgSegmentViewer'] = '背景消息分片',
+	['Show incomplete only'] = '仅显示未完成',
+	['Clear completed'] = '清除已完成',
+
+	-- Dev_BgMsgSegmentViewer_Detail.lua
+	['BgMsgSegmentDetail'] = '背景消息分片详情',
+	['Received:'] = '已接收：',
+	['Segments:'] = '分片列表：',
+
 	-- Dev_UIManager.lua
 	['Dev_UIManager'] = '窗口枚举',
 	UI_DESC = {
