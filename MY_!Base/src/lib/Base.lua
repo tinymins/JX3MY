@@ -56,8 +56,8 @@ local IETF_BCP_47 = {
 }
 
 local _NAME_SPACE_            = 'MY'
-local _BUILD_                 = '20260121'
-local _VERSION_               = '29.0.1'
+local _BUILD_                 = '20260127'
+local _VERSION_               = '29.0.2'
 local _MENU_COLOR_            = {255, 165, 79}
 local _INTERFACE_ROOT_        = 'Interface/'
 local _ADDON_ROOT_            = _INTERFACE_ROOT_ .. _NAME_SPACE_ .. '/'
