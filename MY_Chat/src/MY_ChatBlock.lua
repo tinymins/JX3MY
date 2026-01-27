@@ -514,8 +514,11 @@ function PS.OnPanelActive(wnd)
 			end
 			for _, v in ipairs(history.aRecent) do
 				table.insert(aXml, v)
+				if not X.GetPureText(v):find('\n', 1, true) then
+					table.insert(aXml, X.CONSTANT.XML_LINE_BREAKER)
+				end
 			end
-			X.OutputTip(X.UI(this):HoverItemRect(), table.concat(aXml, '\n'), true, ALW.BOTTOM_TOP)
+			X.OutputTip(X.UI(this):HoverItemRect(), table.concat(aXml, '\n'):gsub('\t', '  '), true, ALW.BOTTOM_TOP)
 		end,
 		function(id, text, data)
 			HideTip()
