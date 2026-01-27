@@ -76,34 +76,40 @@ function D.RefreshList()
 	if not frame then
 		return
 	end
-	local uiList = X.UI(frame):Fetch('WndListBox_Segments')
-	if not uiList:Raw() then
+	local uiTable = X.UI(frame):Fetch('WndTable_Segments')
+	if not uiTable:Raw() then
 		return
 	end
-	uiList:ListBox('clear')
+	local aDataSource = {}
 	for szMsgUUID, tSeg in pairs(O.tSegments) do
 		local bComplete = D.IsComplete(tSeg)
 		-- 过滤：仅显示未组装的
 		if not O.bFilterIncomplete or not bComplete then
-			local szTime = X.FormatTime(tSeg.nTime, '%hh:%mm:%ss')
-			local szChannel = D.GetChannelName(tSeg.nChannel)
 			local nRecv = D.GetReceivedCount(tSeg)
-			local szStatus = bComplete and '[OK]' or string.format('[%d/%d]', nRecv, tSeg.nSegCount)
-			local szText = string.format('%s %s %s %s (%s)', szTime, szStatus, szChannel, tSeg.szMsgID, tSeg.szName)
-			local r, g, b = 255, 255, 255
-			if bComplete then
-				r, g, b = 128, 255, 128
-			elseif nRecv < tSeg.nSegCount then
-				r, g, b = 255, 255, 128
-			end
-			uiList:ListBox('insert', {
-				id = szMsgUUID,
-				text = szText,
-				data = tSeg,
-				r = r, g = g, b = b,
+			table.insert(aDataSource, {
+				szMsgUUID = szMsgUUID,
+				szTime = X.FormatTime(tSeg.nTime, '%hh:%mm:%ss'),
+				szChannel = D.GetChannelName(tSeg.nChannel),
+				szMsgID = tSeg.szMsgID,
+				szName = tSeg.szName,
+				nRecv = nRecv,
+				nSegCount = tSeg.nSegCount,
+				bComplete = bComplete,
+				tSeg = tSeg,
 			})
 		end
 	end
+	uiTable:DataSource(aDataSource)
+end
+
+-- 获取记录颜色
+function D.GetRecordColor(record)
+	if record.bComplete then
+		return 128, 255, 128
+	elseif record.nRecv < record.nSegCount then
+		return 255, 255, 128
+	end
+	return 255, 255, 255
 end
 
 -- 显示详情
@@ -111,32 +117,7 @@ function D.ShowDetail(tSeg)
 	if not tSeg then
 		return
 	end
-	local aLines = {}
-	table.insert(aLines, '========== Segment Detail ==========')
-	table.insert(aLines, 'Time: ' .. X.FormatTime(tSeg.nTime, '%yyyy-%MM-%dd %hh:%mm:%ss'))
-	table.insert(aLines, 'MsgID: ' .. tostring(tSeg.szMsgID))
-	table.insert(aLines, 'MsgUUID: ' .. tostring(tSeg.szMsgUUID))
-	table.insert(aLines, 'Channel: ' .. D.GetChannelName(tSeg.nChannel) .. ' (' .. tostring(tSeg.nChannel) .. ')')
-	table.insert(aLines, 'Sender: ' .. tostring(tSeg.szName) .. ' (' .. tostring(tSeg.dwID) .. ')')
-	table.insert(aLines, 'SegCount: ' .. tostring(tSeg.nSegCount))
-	table.insert(aLines, 'Received: ' .. tostring(D.GetReceivedCount(tSeg)))
-	table.insert(aLines, 'Complete: ' .. tostring(D.IsComplete(tSeg)))
-	table.insert(aLines, '')
-	table.insert(aLines, '---------- Segments ----------')
-	for i = 1, tSeg.nSegCount do
-		local part = tSeg.aParts[i]
-		if part then
-			table.insert(aLines, string.format('[%d] Received at %s', i, X.FormatTime(part.nTime, '%hh:%mm:%ss')))
-			table.insert(aLines, '    ' .. tostring(part.szPart))
-		else
-			table.insert(aLines, string.format('[%d] (Missing)', i))
-		end
-	end
-	X.UI.OpenTextEditor(table.concat(aLines, '\n'), {
-		title = 'Segment Detail - ' .. tostring(tSeg.szMsgID),
-		w = 600,
-		h = 500,
-	})
+	_G[X.NSFormatString('{$NS}_BgMsgSegmentViewer_Detail')].Open(tSeg)
 end
 
 -- 打开界面
@@ -146,8 +127,8 @@ function D.Open()
 		return
 	end
 	local ui = X.UI.CreateFrame(FRAME_NAME, {
-		w = 700,
-		h = 500,
+		w = 800,
+		h = 600,
 		text = X.PACKET_INFO.NAME .. g_tStrings.STR_CONNECT .. _L['BgMsgSegmentViewer'],
 		anchor = { s = 'CENTER', r = 'CENTER', x = 0, y = 0 },
 		close = true,
@@ -195,16 +176,70 @@ function D.Open()
 			D.RefreshList()
 		end,
 	})
-	-- 列表
-	ui:Append('WndListBox', {
-		name = 'WndListBox_Segments',
+	-- 表格
+	ui:Append('WndTable', {
+		name = 'WndTable_Segments',
 		x = 10, y = 85,
 		w = nW - 20,
 		h = nH - 95,
+		onRowLClick = function(rec, nIndex)
+			D.ShowDetail(rec.tSeg)
+		end,
+		columns = {
+			{
+				key = 'szTime',
+				title = _L['Time'],
+				alignHorizontal = 'center',
+				width = 80,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					return GetFormatText(value, 162, r, g, b)
+				end,
+			},
+			{
+				key = 'bComplete',
+				title = _L['Status'],
+				alignHorizontal = 'center',
+				width = 80,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					local szStatus = value and 'OK' or string.format('%d/%d', record.nRecv, record.nSegCount)
+					return GetFormatText(szStatus, 162, r, g, b)
+				end,
+			},
+			{
+				key = 'szChannel',
+				title = _L['Channel'],
+				alignHorizontal = 'center',
+				width = 100,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					return GetFormatText(value, 162, r, g, b)
+				end,
+			},
+			{
+				key = 'szName',
+				title = _L['Sender'],
+				alignHorizontal = 'left',
+				width = 120,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					return GetFormatText(' ' .. tostring(value), 162, r, g, b)
+				end,
+			},
+			{
+				key = 'szMsgID',
+				title = _L['MsgID'],
+				alignHorizontal = 'left',
+				minWidth = 300,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					return GetFormatText(' ' .. tostring(value), 162, r, g, b)
+				end,
+			},
+		},
+		dataSource = {},
 	})
-	X.UI(ui:Raw()):Fetch('WndListBox_Segments'):ListBox('onlclick', function(id, text, data, selected)
-		D.ShowDetail(data)
-	end)
 	D.RefreshList()
 end
 
@@ -215,7 +250,7 @@ function D.OnResize()
 	end
 	local ui = X.UI(frame)
 	local nW, nH = ui:ContainerSize()
-	ui:Fetch('WndListBox_Segments'):Size(nW - 20, nH - 95)
+	ui:Fetch('WndTable_Segments'):Size(nW - 20, nH - 95)
 end
 
 function D.Close()

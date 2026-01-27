@@ -76,10 +76,25 @@ function D.SendMessage()
 end
 
 -- 打开界面
-function D.Open()
+-- tParams: { nChannel, szTarget, szMsgID, szData }
+function D.Open(tParams)
 	if D.IsOpened() then
 		D.Close()
-		return
+	end
+	-- 如果有参数，预填充数据
+	if X.IsTable(tParams) then
+		if tParams.nChannel ~= nil then
+			O.nChannel = tParams.nChannel
+		end
+		if tParams.szTarget ~= nil then
+			O.szTarget = tParams.szTarget
+		end
+		if tParams.szMsgID ~= nil then
+			O.szMsgID = tParams.szMsgID
+		end
+		if tParams.szData ~= nil then
+			O.szData = tParams.szData
+		end
 	end
 	local ui = X.UI.CreateFrame(FRAME_NAME, {
 		w = 500,

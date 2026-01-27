@@ -86,32 +86,33 @@ function D.RefreshList()
 	if not frame then
 		return
 	end
-	local uiList = X.UI(frame):Fetch('WndListBox_History')
-	if not uiList:Raw() then
+	local uiTable = X.UI(frame):Fetch('WndTable_History')
+	if not uiTable:Raw() then
 		return
 	end
-	uiList:ListBox('clear')
+	local aDataSource = {}
 	for i, rec in ipairs(O.aHistory) do
-		local szTime = X.FormatTime(rec.nTime, '%hh:%mm:%ss')
-		local szChannel = D.GetChannelName(rec.nChannel)
-		local szStatus = rec.bComplete and '[OK]' or '[..]'
-		local szDir = rec.szDirection == 'OUT' and '[OUT]' or '[IN]'
-		local szText = string.format('%s %s %s %s %s (%s)', szTime, szDir, szStatus, szChannel, rec.szMsgID, rec.szName)
-		local r, g, b = 255, 255, 255
-		if rec.szDirection == 'OUT' then
-			r, g, b = 128, 200, 255
-		elseif rec.bSelf then
-			r, g, b = 128, 255, 128
-		elseif not rec.bComplete then
-			r, g, b = 255, 255, 128
+		local szPreview = ''
+		if rec.oData ~= nil then
+			szPreview = X.EncodeLUAData(rec.oData)
+			if #szPreview > 100 then
+				szPreview = szPreview:sub(1, 100) .. '...'
+			end
 		end
-		uiList:ListBox('insert', {
-			id = i,
-			text = szText,
-			data = rec,
-			r = r, g = g, b = b,
+		table.insert(aDataSource, {
+			nIndex = i,
+			szTime = X.FormatTime(rec.nTime, '%hh:%mm:%ss'),
+			szDirection = rec.szDirection or 'IN',
+			bComplete = rec.bComplete,
+			szChannel = D.GetChannelName(rec.nChannel),
+			szMsgID = rec.szMsgID,
+			szName = rec.szName,
+			szPreview = szPreview,
+			bSelf = rec.bSelf,
+			rec = rec,
 		})
 	end
+	uiTable:DataSource(aDataSource)
 end
 
 -- 显示详情
@@ -119,36 +120,10 @@ function D.ShowDetail(rec)
 	if not rec then
 		return
 	end
-	local aLines = {}
-	table.insert(aLines, '========== BgMsg Detail ==========')
-	table.insert(aLines, 'Time: ' .. X.FormatTime(rec.nTime, '%yyyy-%MM-%dd %hh:%mm:%ss'))
-	table.insert(aLines, 'Direction: ' .. tostring(rec.szDirection or 'IN'))
-	table.insert(aLines, 'MsgID: ' .. tostring(rec.szMsgID))
-	table.insert(aLines, 'MsgUUID: ' .. tostring(rec.szMsgUUID))
-	table.insert(aLines, 'Channel: ' .. D.GetChannelName(rec.nChannel) .. ' (' .. tostring(rec.nChannel) .. ')')
-	if rec.szTarget then
-		table.insert(aLines, 'Target: ' .. tostring(rec.szTarget))
+	local szDetailName = X.NSFormatString('{$NS}_BgMsgViewer_Detail')
+	if _G[szDetailName] and _G[szDetailName].Open then
+		_G[szDetailName].Open(rec)
 	end
-	table.insert(aLines, 'Sender: ' .. tostring(rec.szName) .. ' (' .. tostring(rec.dwID) .. ')')
-	table.insert(aLines, 'IsSelf: ' .. tostring(rec.bSelf))
-	table.insert(aLines, 'SegCount: ' .. tostring(rec.nSegCount))
-	table.insert(aLines, 'SegIndex: ' .. tostring(rec.nSegIndex))
-	table.insert(aLines, 'Complete: ' .. tostring(rec.bComplete))
-	table.insert(aLines, '')
-	table.insert(aLines, '---------- Raw Part ----------')
-	table.insert(aLines, tostring(rec.szPart))
-	table.insert(aLines, '')
-	table.insert(aLines, '---------- Decoded Data ----------')
-	if rec.oData ~= nil then
-		table.insert(aLines, X.EncodeLUAData(rec.oData, '  '))
-	else
-		table.insert(aLines, '(Not yet decoded or decode failed)')
-	end
-	X.UI.OpenTextEditor(table.concat(aLines, '\n'), {
-		title = 'BgMsg Detail - ' .. tostring(rec.szMsgID),
-		w = 600,
-		h = 500,
-	})
 end
 
 -- 打开界面
@@ -158,8 +133,8 @@ function D.Open()
 		return
 	end
 	local ui = X.UI.CreateFrame(FRAME_NAME, {
-		w = 700,
-		h = 500,
+		w = 1200,
+		h = 700,
 		text = X.PACKET_INFO.NAME .. g_tStrings.STR_CONNECT .. _L['BgMsgViewer'],
 		anchor = { s = 'CENTER', r = 'CENTER', x = 0, y = 0 },
 		close = true,
@@ -200,10 +175,7 @@ function D.Open()
 		x = nX, y = 50, w = 120, h = 25,
 		text = _L['Segment Viewer'],
 		onClick = function()
-			local szSegmentViewerName = X.NSFormatString('{$NS}_BgMsgSegmentViewer')
-			if _G[szSegmentViewerName] and _G[szSegmentViewerName].Open then
-				_G[szSegmentViewerName].Open()
-			end
+			_G[X.NSFormatString('{$NS}_BgMsgSegmentViewer')].Open()
 		end,
 	})
 	nX = nX + 130
@@ -212,23 +184,147 @@ function D.Open()
 		x = nX, y = 50, w = 120, h = 25,
 		text = _L['BgMsg Sender'],
 		onClick = function()
-			local szSenderName = X.NSFormatString('{$NS}_BgMsgSender')
-			if _G[szSenderName] and _G[szSenderName].Open then
-				_G[szSenderName].Open()
-			end
+			_G[X.NSFormatString('{$NS}_BgMsgSender')].Open()
 		end,
 	})
-	-- 列表
-	ui:Append('WndListBox', {
-		name = 'WndListBox_History',
+	-- 表格
+	ui:Append('WndTable', {
+		name = 'WndTable_History',
 		x = 10, y = 85,
 		w = nW - 20,
 		h = nH - 95,
+		onRowLClick = function(rec, nIndex)
+			D.ShowDetail(rec.rec)
+		end,
+		onRowRClick = function(rec, nIndex)
+			if not rec or not rec.rec then
+				return
+			end
+			local r = rec.rec
+			local menu = {
+				{
+					szOption = _L['Replay'],
+					fnAction = function()
+						local szData = ''
+						if r.oData ~= nil then
+							szData = X.EncodeLUAData(r.oData, '  ')
+						end
+						-- 处理频道和目标
+						local nChannel = type(r.nChannel) == 'number' and r.nChannel or PLAYER_TALK_CHANNEL.WHISPER
+						local szTarget = r.szTarget or ''
+						-- 如果是密聊且目标为空，用发送者名字作为目标（回复）
+						if X.IsEmpty(szTarget) and nChannel == PLAYER_TALK_CHANNEL.WHISPER then
+							szTarget = r.szName or ''
+						end
+						-- 如果原始频道是字符串（密聊目标名），也用它作为目标
+						if type(r.nChannel) == 'string' then
+							szTarget = r.nChannel
+						end
+						_G[X.NSFormatString('{$NS}_BgMsgSender')].Open({
+							nChannel = nChannel,
+							szTarget = szTarget,
+							szMsgID = r.szMsgID or '',
+							szData = szData,
+						})
+					end,
+				},
+				{
+					szOption = _L['View Detail'],
+					fnAction = function()
+						D.ShowDetail(r)
+					end,
+				},
+			}
+			PopupMenu(menu)
+		end,
+		columns = {
+			{
+				key = 'szTime',
+				title = _L['Time'],
+				alignHorizontal = 'center',
+				width = 80,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					return GetFormatText(value, 162, r, g, b)
+				end,
+			},
+			{
+				key = 'szDirection',
+				title = _L['Dir'],
+				alignHorizontal = 'center',
+				width = 60,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					return GetFormatText(value, 162, r, g, b)
+				end,
+			},
+			{
+				key = 'bComplete',
+				title = _L['Status'],
+				alignHorizontal = 'center',
+				width = 60,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					local szStatus = value and 'OK' or '..'
+					return GetFormatText(szStatus, 162, r, g, b)
+				end,
+			},
+			{
+				key = 'szChannel',
+				title = _L['Channel'],
+				alignHorizontal = 'center',
+				width = 100,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					return GetFormatText(value, 162, r, g, b)
+				end,
+			},
+			{
+				key = 'szName',
+				title = _L['Sender'],
+				alignHorizontal = 'left',
+				width = 120,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					return GetFormatText(' ' .. tostring(value), 162, r, g, b)
+				end,
+			},
+			{
+				key = 'szMsgID',
+				title = _L['MsgID'],
+				alignHorizontal = 'left',
+				width = 200,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					return GetFormatText(' ' .. tostring(value), 162, r, g, b)
+				end,
+			},
+			{
+				key = 'szPreview',
+				title = _L['Preview'],
+				alignHorizontal = 'left',
+				minWidth = 200,
+				render = function(value, record)
+					local r, g, b = D.GetRecordColor(record)
+					return GetFormatText(' ' .. tostring(value), 162, r, g, b)
+				end,
+			},
+		},
+		dataSource = {},
 	})
-	X.UI(ui:Raw()):Fetch('WndListBox_History'):ListBox('onlclick', function(id, text, data, selected)
-		D.ShowDetail(data)
-	end)
 	D.RefreshList()
+end
+
+-- 获取记录颜色
+function D.GetRecordColor(record)
+	if record.szDirection == 'OUT' then
+		return 128, 200, 255
+	elseif record.bSelf then
+		return 128, 255, 128
+	elseif not record.bComplete then
+		return 255, 255, 128
+	end
+	return 255, 255, 255
 end
 
 function D.OnResize()
@@ -238,7 +334,7 @@ function D.OnResize()
 	end
 	local ui = X.UI(frame)
 	local nW, nH = ui:ContainerSize()
-	ui:Fetch('WndListBox_History'):Size(nW - 20, nH - 95)
+	ui:Fetch('WndTable_History'):Size(nW - 20, nH - 95)
 end
 
 function D.Close()
