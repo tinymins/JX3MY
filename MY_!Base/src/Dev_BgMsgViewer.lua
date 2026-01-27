@@ -16,6 +16,7 @@ local _L = X.LoadLangPack(X.PACKET_INFO.FRAMEWORK_ROOT .. '/lang/Dev/')
 local FRAME_NAME = X.NSFormatString('{$NS}_BgMsgViewer')
 local STORAGE_FILE = {'temporary/bgmsg_viewer.jx3dat', X.PATH_TYPE.ROLE}
 local MAX_HISTORY = 1000
+local MAX_STORAGE_HISTORY = 200
 
 local O = {
 	bRecording = false,
@@ -34,9 +35,18 @@ end
 
 -- 保存持久化数据
 function D.SaveStorage()
+	-- 只保留最新的 MAX_STORAGE_HISTORY 条记录
+	local aHistory = O.aHistory
+	if #aHistory > MAX_STORAGE_HISTORY then
+		local aStorageHistory = {}
+		for i = #aHistory - MAX_STORAGE_HISTORY + 1, #aHistory do
+			table.insert(aStorageHistory, aHistory[i])
+		end
+		aHistory = aStorageHistory
+	end
 	X.SaveLUAData(STORAGE_FILE, {
 		bRecording = O.bRecording,
-		aHistory = O.aHistory,
+		aHistory = aHistory,
 	})
 end
 
