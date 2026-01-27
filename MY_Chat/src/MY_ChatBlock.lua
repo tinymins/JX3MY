@@ -14,7 +14,7 @@ local PLUGIN_ROOT = X.PACKET_INFO.ROOT .. PLUGIN_NAME
 local MODULE_NAME = 'MY_ChatBlock'
 local _L = X.LoadLangPack(PLUGIN_ROOT .. '/lang/')
 --------------------------------------------------------------------------
-if not X.AssertVersion(MODULE_NAME, _L[MODULE_NAME], '^29.0.0') then
+if not X.AssertVersion(MODULE_NAME, _L[MODULE_NAME], '^29.0.3') then
 	return
 end
 --[[#DEBUG BEGIN]]X.ReportModuleLoading(MODULE_PATH, 'START')--[[#DEBUG END]]
@@ -126,11 +126,9 @@ function D.OnTalkFilter(nChannel, t, dwTalkerID, szName, bEcho, bOnlyShowBallon,
 			if #O.tBlockHistory[uuid].aRecent >= 10 then
 				table.remove(O.tBlockHistory[uuid].aRecent, 1)
 			end
-			local szType, r, g, b, nFont = X.CONSTANT.PLAYER_TALK_CHANNEL_TO_FONT[nChannel]
-			if szType then
-				nFont = GetMsgFont(szType)
-				r, g, b = GetMsgFontColor(nFont)
-			end
+			local szMsgType = TALK_CHANNEL_MSG_TYPE[nChannel]
+			local nFont = szMsgType and GetMsgFont(szMsgType)
+			local r, g, b = GetMsgFontColor(nFont, true)
 			table.insert(
 				O.tBlockHistory[uuid].aRecent,
 				X.GetChatTimeXML(GetCurrentTime(), {
@@ -516,8 +514,11 @@ function PS.OnPanelActive(wnd)
 			end
 			for _, v in ipairs(history.aRecent) do
 				table.insert(aXml, v)
+				if not X.GetPureText(v):find('\n', 1, true) then
+					table.insert(aXml, X.CONSTANT.XML_LINE_BREAKER)
+				end
 			end
-			X.OutputTip(X.UI(this):HoverItemRect(), table.concat(aXml, '\n'), true, ALW.BOTTOM_TOP)
+			X.OutputTip(X.UI(this):HoverItemRect(), table.concat(aXml, '\n'):gsub('\t', '  '), true, ALW.BOTTOM_TOP)
 		end,
 		function(id, text, data)
 			HideTip()
