@@ -126,11 +126,9 @@ function D.OnTalkFilter(nChannel, t, dwTalkerID, szName, bEcho, bOnlyShowBallon,
 			if #O.tBlockHistory[uuid].aRecent >= 10 then
 				table.remove(O.tBlockHistory[uuid].aRecent, 1)
 			end
-			local szType, r, g, b, nFont = X.CONSTANT.PLAYER_TALK_CHANNEL_TO_FONT[nChannel]
-			if szType then
-				nFont = GetMsgFont(szType)
-				r, g, b = GetMsgFontColor(nFont)
-			end
+			local szMsgType = TALK_CHANNEL_MSG_TYPE[nChannel]
+			local nFont = szMsgType and GetMsgFont(szMsgType)
+			local r, g, b = GetMsgFontColor(nFont, true)
 			table.insert(
 				O.tBlockHistory[uuid].aRecent,
 				X.GetChatTimeXML(GetCurrentTime(), {
