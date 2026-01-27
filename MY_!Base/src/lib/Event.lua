@@ -670,13 +670,17 @@ local BG_MSG_PROGRESS_EVENT = { szName = 'BgMsgProgress' }
 ------------------------------------
 do
 local BG_MSG_PART = {}
+local VIEWER_NAME = X.NSFormatString('{$NS}_BgMsgViewer')
+local SEGMENT_VIEWER_NAME = X.NSFormatString('{$NS}_BgMsgSegmentViewer')
 local function OnBgMsg()
 	local szMsgSID, nChannel, dwID, szName, aMsg, bSelf = arg0, arg1, arg2, arg3, arg4, arg2 == X.GetClientPlayerID()
 	if not szMsgSID or szMsgSID:sub(1, #BG_MSG_ID_PREFIX) ~= BG_MSG_ID_PREFIX or szMsgSID:sub(-#BG_MSG_ID_SUFFIX) ~= BG_MSG_ID_SUFFIX then
 		return
 	end
 	local szMsgID = szMsgSID:sub(#BG_MSG_ID_PREFIX + 1, -#BG_MSG_ID_SUFFIX - 1)
-	if not CommonEventRegister(BG_MSG_EVENT, szMsgID) then
+	local bRegistered = CommonEventRegister(BG_MSG_EVENT, szMsgID)
+	local bDebugging = X.IsDebugging('Dev_BgMsgViewer')
+	if not bRegistered and not bDebugging then
 		return
 	end
 	-- pagination
@@ -685,6 +689,10 @@ local function OnBgMsg()
 		BG_MSG_PART[szMsgUUID] = {}
 	end
 	BG_MSG_PART[szMsgUUID][nSegIndex] = X.SimpleDecryptString(X.IsString(szPart) and szPart or '')
+	-- hook: record segment to segment viewer
+	if _G[SEGMENT_VIEWER_NAME] and _G[SEGMENT_VIEWER_NAME].RecordSegment then
+		_G[SEGMENT_VIEWER_NAME].RecordSegment(szMsgID, szMsgUUID, nChannel, dwID, szName, nSegCount, nSegIndex, szPart)
+	end
 	-- fire progress event
 	local nSegRecv = 0
 	for _, _ in pairs(BG_MSG_PART[szMsgUUID]) do
@@ -696,7 +704,17 @@ local function OnBgMsg()
 		local szPlain = table.concat(BG_MSG_PART[szMsgUUID])
 		local aData = szPlain and X.DecodeLUAData(szPlain)
 		if aData then
-			CommonEventFirer(BG_MSG_EVENT, szMsgID, aData[1], nChannel, dwID, szName, bSelf)
+			-- hook: record complete message to viewer
+			if _G[VIEWER_NAME] and _G[VIEWER_NAME].RecordMessage then
+				_G[VIEWER_NAME].RecordMessage(szMsgID, nChannel, dwID, szName, bSelf, aMsg, aData[1], nSegCount)
+			end
+			-- hook: mark complete in segment viewer
+			if _G[SEGMENT_VIEWER_NAME] and _G[SEGMENT_VIEWER_NAME].MarkComplete then
+				_G[SEGMENT_VIEWER_NAME].MarkComplete(szMsgUUID)
+			end
+			if bRegistered then
+				CommonEventFirer(BG_MSG_EVENT, szMsgID, aData[1], nChannel, dwID, szName, bSelf)
+			end
 		--[[#DEBUG BEGIN]]
 		else
 			X.OutputDebugMessage('BG_EVENT#' .. szMsgID, X.GetTraceback('Cannot decode BgMsg: ' .. szPlain), X.DEBUG_LEVEL.ERROR)
@@ -729,6 +747,7 @@ end
 end
 
 do
+local VIEWER_NAME = X.NSFormatString('{$NS}_BgMsgViewer')
 local MAX_CHANNEL_LEN = setmetatable({
 	[PLAYER_TALK_CHANNEL.RAID] = 300,
 	[PLAYER_TALK_CHANNEL.BATTLE_FIELD] = 300,
@@ -797,6 +816,11 @@ function X.SendBgMsg(nChannel, szMsgID, oData, bSilent)
 			{ type = 'eventlink', name = '', linkinfo = X.EncodeLUAData(szSeg) },
 		}
 		me.Talk(nChannel, szTarget, aSay)
+	end
+	-- hook: record outbound message to viewer
+	if _G[VIEWER_NAME] and _G[VIEWER_NAME].RecordMessage then
+		local aMsg = { { u = szMsgUUID, c = nSegCount, i = 1 }, szArg }
+		_G[VIEWER_NAME].RecordMessage(szMsgID, nChannel, me.dwID, me.szName, true, aMsg, oData, nSegCount, 'OUT')
 	end
 end
 end

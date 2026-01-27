@@ -205,25 +205,25 @@ function PS.OnPanelActive(wnd)
 	nY = nY + 40
 
 	local uiMemory = ui:Append('Text', {
-		x = nX, y = nY, w = 150,
+		x = nX, y = nY, w = W - nX - nPaddingX,
 		alpha = 150, font = 162,
 	})
 	nY = nY + 25
 
 	local uiSize = ui:Append('Text', {
-		x = nX, y = nY, w = 150,
+		x = nX, y = nY, w = W - nX - nPaddingX,
 		alpha = 150, font = 162,
 	})
 	nY = nY + 25
 
 	local uiUIScale = ui:Append('Text', {
-		x = nX, y = nY, w = 150,
+		x = nX, y = nY, w = W - nX - nPaddingX,
 		alpha = 150, font = 162,
 	})
 	nY = nY + 25
 
 	local uiFontScale = ui:Append('Text', {
-		x = nX, y = nY, w = 150,
+		x = nX, y = nY, w = W - nX - nPaddingX,
 		alpha = 150, font = 162,
 	})
 	nY = nY + 25
