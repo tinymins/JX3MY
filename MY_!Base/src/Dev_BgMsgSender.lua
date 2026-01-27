@@ -3,8 +3,8 @@
 -- @desc     : ±³¾°Í¨Ñ¶·¢ËÍÆ÷
 -- @copyright: Emil Zhai <root@zhaiyiming.com>
 --------------------------------------------------------------------------------
----@class (partial) Boilerplate
-local X = Boilerplate
+---@class (partial) MY
+local X = MY
 --------------------------------------------------------------------------------
 local MODULE_PATH = X.NSFormatString('{$NS}_!Base/Dev_BgMsgSender')
 --------------------------------------------------------------------------------
