@@ -38,6 +38,7 @@ return {
 	['No error message found.'] = '没有找到错误日志记录。',
 	['Open error message folder'] = '打开错误日志记录所在文件夹',
 	['Open logs folder'] = '打开插件日志文件夹',
+	['Open BgMsgViewer'] = '打开背景通讯调试工具',
 	['Report bugs'] = '问题反馈',
 	['Enable debug tools'] = '启用调试工具',
 	['Debug tools has been enabled...'] = '测试工具已激活_(:彡」∠)_',
