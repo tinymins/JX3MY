@@ -9,6 +9,32 @@ return {
 	-- Dev_UIEditor.lua
 	['Dev_UIEditor'] = '窗口查看',
 
+	-- Dev_BgMsgViewer.lua
+	['BgMsgViewer'] = '背景消息查看',
+	['Recording'] = '記錄中',
+	['Clear'] = '清空',
+	['Segment Viewer'] = '分片查看',
+	['BgMsg Sender'] = '消息發送',
+
+	-- Dev_BgMsgSender.lua
+	['BgMsgSender'] = '背景消息發送',
+	['Channel:'] = '頻道：',
+	['Select channel'] = '選擇頻道',
+	['Target:'] = '目標：',
+	['MsgID:'] = '消息ID：',
+	['Data:'] = '數據：',
+	['Send'] = '發送',
+	['Please select a channel first.'] = '請先選擇頻道。',
+	['Please input MsgID.'] = '請輸入消息ID。',
+	['Data decode failed, please check Lua syntax.'] = '數據解碼失敗，請檢查Lua語法。',
+	['Whisper channel requires target name.'] = '密聊頻道需要輸入目標名字。',
+	['BgMsg sent: %s'] = '背景消息已發送：%s',
+
+	-- Dev_BgMsgSegmentViewer.lua
+	['BgMsgSegmentViewer'] = '背景消息分片',
+	['Show incomplete only'] = '僅顯示未完成',
+	['Clear completed'] = '清除已完成',
+
 	-- Dev_UIManager.lua
 	['Dev_UIManager'] = '窗口枚舉',
 	UI_DESC = {
