@@ -156,6 +156,7 @@ function D.Open()
 		onCheck = function(bChecked)
 			O.bRecording = bChecked
 			D.SaveStorage()
+			D.UpdateEnableState()
 		end,
 	})
 	nX = nX + 100
@@ -328,6 +329,21 @@ function D.Open()
 		dataSource = {},
 	})
 	D.RefreshList()
+	D.UpdateEnableState()
+end
+
+-- 更新组件启用状态
+function D.UpdateEnableState()
+	local frame = Station.Lookup('Normal/' .. FRAME_NAME)
+	if not frame then
+		return
+	end
+	local ui = X.UI(frame)
+	local bEnable = O.bRecording
+	ui:Fetch('WndButton_Clear'):Enable(bEnable)
+	ui:Fetch('WndButton_Segment'):Enable(bEnable)
+	ui:Fetch('WndButton_Sender'):Enable(bEnable)
+	ui:Fetch('WndTable_History'):Enable(bEnable)
 end
 
 -- 获取记录颜色
