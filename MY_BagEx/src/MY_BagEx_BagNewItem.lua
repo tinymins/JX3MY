@@ -95,6 +95,19 @@ function D.CreateBagItemCache()
 end
 
 function D.OnBagItemUpdate(dwBox, dwX)
+	-- Only process items in regular package boxes, skip special packages (e.g., NEARLY_DYING_PACKAGE)
+	local aPackageBoxList = X.GetInventoryBoxList(X.CONSTANT.INVENTORY_TYPE.PACKAGE)
+	local bInPackage = false
+	for _, dwIterBox in ipairs(aPackageBoxList) do
+		if dwIterBox == dwBox then
+			bInPackage = true
+			break
+		end
+	end
+	if not bInPackage then
+		D.CreateBagItemCache() -- still refresh cache to keep it in sync
+		return
+	end
 	local me = X.GetClientPlayer()
 	local kItem = X.GetInventoryItem(me, dwBox, dwX)
 	if kItem then
