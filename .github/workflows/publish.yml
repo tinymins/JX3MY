@@ -47,7 +47,7 @@ jobs:
           echo "✅ 输入验证通过"
 
       - name: Checkout full repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.PAT_TOKEN }}
@@ -175,7 +175,7 @@ jobs:
 
       - name: Create Pull Request
         id: create_pr
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           title: "release: v${{ steps.calculate_version.outputs.new_version }}"
@@ -185,7 +185,7 @@ jobs:
 
       - name: Upload Artifacts
         id: upload_artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: dist-archives-${{ github.run_number }}-${{ github.sha }}
           path: '\!src-dist/dist/*.7z'
