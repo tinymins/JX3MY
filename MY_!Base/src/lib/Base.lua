@@ -20,6 +20,9 @@ elseif _GAME_BRANCH_ == 'zhtw' then
 end
 -- 游戏发行版编码
 local _GAME_EDITION_ = string.lower(szVersionLineName .. '_' .. szVersionEx)
+if szVersionEx == 'bvt' and szVersionLineName == 'classic' then
+	_GAME_EDITION_ = string.lower(szVersionLineName .. '_yq')
+end
 -- 游戏版本号
 local _GAME_VERSION_ = string.lower(szVersion)
 -- 游戏运行方式，本地、云端
