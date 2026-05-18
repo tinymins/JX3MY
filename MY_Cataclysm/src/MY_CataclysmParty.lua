@@ -104,6 +104,9 @@ end
 X.RegisterEvent('BUFF_UPDATE', 'MY_Cataclysm', function()
 	-- local owner, bdelete, index, cancancel, id  , stacknum, endframe, binit, level, srcid, isvalid, leftframe
 	--     = arg0 , arg1   , arg2 , arg3     , arg4, arg5    , arg6    , arg7 , arg8 , arg9 , arg10  , arg11
+	if arg4 == 33842 and MY_CataclysmParty then
+		MY_CataclysmParty:RefreshLiveByMemberID(arg0)
+	end
 	if arg1 then
 		return
 	end
@@ -111,6 +114,12 @@ X.RegisterEvent('BUFF_UPDATE', 'MY_Cataclysm', function()
 		CTM_BUFF_TIME[arg0] = {}
 	end
 	CTM_BUFF_TIME[arg0][arg4] = GetTime()
+end)
+
+X.RegisterEvent('ON_DUNGEON_OB_STREAMER_LIST_UPDATE', 'MY_Cataclysm', function()
+	if MY_CataclysmParty then
+		MY_CataclysmParty:RefreshLiveAll()
+	end
 end)
 
 do
@@ -1051,6 +1060,35 @@ function CTM:CallRefreshImages(dwID, ...)
 	end
 end
 
+function CTM:RefreshLive(h, dwID, info)
+	if not info or not OBDungeon_IsPlayerStreamer then
+		return
+	end
+	local hImageLive = h:Lookup('Image_Live')
+	if not hImageLive or not hImageLive:IsValid() then
+		return
+	end
+	local bStreamer = OBDungeon_IsPlayerStreamer(info.szGlobalID) or false
+	local bVoiceBroadcast = OBDungeon_IsPlayerVoiceBroadcast(dwID) or false
+	hImageLive:SetVisible(bStreamer)
+	hImageLive:SetFrame(bVoiceBroadcast and 71 or 14)
+end
+
+function CTM:RefreshLiveByMemberID(dwID)
+	local h = CTM_CACHE[dwID]
+	if h and h:IsValid() then
+		self:RefreshLive(h, dwID, self:GetMemberInfo(dwID))
+	end
+end
+
+function CTM:RefreshLiveAll()
+	for dwID, h in pairs(CTM_CACHE) do
+		if h:IsValid() then
+			self:RefreshLive(h, dwID, self:GetMemberInfo(dwID))
+		end
+	end
+end
+
 function CTM:KungFuSwitch(dwID)
 	local handle = CTM_CACHE[dwID]
 	if handle and handle:IsValid() then
@@ -1223,6 +1261,7 @@ function CTM:RefreshImages(h, dwID, info, tSetting, bIcon, bFormationLeader, bLa
 			hBoxes:SetRelPos(hMana:GetRelX() - 1, hMana:GetRelY() - hBoxes:GetH() + hMana:GetH() / 2)
 			hBoxes:SetAbsPos(hMana:GetAbsX() - 1, hMana:GetAbsY() - hBoxes:GetH() + hMana:GetH() / 2)
 		end
+		self:RefreshLive(h, dwID, info)
 	end
 end
 

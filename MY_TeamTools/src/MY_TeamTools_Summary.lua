@@ -632,10 +632,12 @@ function D.GetEquipCache(page, KPlayer)
 		tTemporaryEnchant = {}
 	}
 	-- 装备 Output(X.GetInventoryItem(X.GetClientPlayer(),0,0).GetMagicAttrib())
+	local kungfu = KPlayer.GetKungfuMount and KPlayer.GetKungfuMount()
 	for _, equip in ipairs(RT_EQUIP_TOTAL) do
 		-- if #tInfo.tEquip >= 3 then break end
-		-- 藏剑只看重剑
-		if KPlayer.dwForceID == 8 and X.CONSTANT.EQUIPMENT_INVENTORY[equip] == X.CONSTANT.EQUIPMENT_INVENTORY.MELEE_WEAPON then
+		-- 藏剑心法只看重剑
+		if kungfu and X.CONSTANT.KUNGFU_FORCE_TYPE[kungfu.dwSkillID] == X.CONSTANT.FORCE_TYPE.CANG_JIAN
+		and X.CONSTANT.EQUIPMENT_INVENTORY[equip] == X.CONSTANT.EQUIPMENT_INVENTORY.MELEE_WEAPON then
 			equip = 'BIG_SWORD'
 		end
 		local dwBox, dwX = INVENTORY_INDEX.EQUIP, X.CONSTANT.EQUIPMENT_INVENTORY[equip]
