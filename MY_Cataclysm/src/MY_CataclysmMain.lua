@@ -690,6 +690,7 @@ function D.OnFrameCreate()
 	this:RegisterEvent('TARGET_CHANGE')
 	this:RegisterEvent('CHARACTER_THREAT_RANKLIST')
 	this:RegisterEvent('BUFF_UPDATE')
+	this:RegisterEvent('ON_DUNGEON_OB_STREAMER_LIST_UPDATE')
 	this:RegisterEvent('PLAYER_ENTER_SCENE')
 	this:RegisterEvent('MY_CATACLYSM_BUFF_LIST_CACHE_UPDATE')
 	this:RegisterEvent('MY_CATACLYSM_SET_VISIBLE')
@@ -904,10 +905,15 @@ function D.OnEvent(szEvent)
 	elseif szEvent == 'BUFF_UPDATE' then
 		-- local owner, bdelete, index, cancancel, id  , stacknum, endframe, binit, level, srcid, isvalid, leftframe
 		--     = arg0 , arg1   , arg2 , arg3     , arg4, arg5    , arg6    , arg7 , arg8 , arg9 , arg10  , arg11
+		if arg4 == 33842 then
+			MY_CataclysmParty:RefreshLiveByMemberID(arg0)
+		end
 		if arg1 then
 			return
 		end
 		OnBuffUpdate(arg0, arg4, arg8, arg5, arg9)
+	elseif szEvent == 'ON_DUNGEON_OB_STREAMER_LIST_UPDATE' then
+		MY_CataclysmParty:RefreshLiveAll()
 	elseif szEvent == 'PLAYER_ENTER_SCENE' then
 		if X.ENVIRONMENT.RUNTIME_OPTIMIZE then
 			return
