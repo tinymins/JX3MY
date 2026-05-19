@@ -34,11 +34,12 @@ jobs:
 
           MATCH_COMMIT=""
           MATCH_VERSION=""
+          RELEASE_COMMIT_PATTERN='^release:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+)?)'
 
           # 遍历范围内的所有 commit（包括 merge commit 带入的 parent commits）
           while IFS='|' read -r hash msg; do
             # 优先匹配直接的 release commit: "release: X.X.X"
-            if [[ "$msg" =~ ^release:\s*([0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+)?) ]]; then
+            if [[ "$msg" =~ $RELEASE_COMMIT_PATTERN ]]; then
               MATCH_COMMIT="$hash"
               MATCH_VERSION="${BASH_REMATCH[1]}"
               echo "Found direct release commit: $hash ($msg)"
@@ -56,7 +57,7 @@ jobs:
                 MERGE_PARENT=$(git log --format='%H' -1 "$hash^2" 2>/dev/null || true)
                 if [ -n "$MERGE_PARENT" ]; then
                   # 在被合并的分支中查找真正的 release commit
-                  RELEASE_COMMIT=$(git log --format='%H|%s' "$MERGE_PARENT" -20 | grep -E '^\w+\|release:\s*'"$VERSION" | head -1 | cut -d'|' -f1)
+                  RELEASE_COMMIT=$(git log --format='%H|%s' "$MERGE_PARENT" -20 | grep -E '^[[:xdigit:]]+\|release:[[:space:]]*'"$VERSION" | head -1 | cut -d'|' -f1)
                   if [ -n "$RELEASE_COMMIT" ]; then
                     MATCH_COMMIT="$RELEASE_COMMIT"
                     MATCH_VERSION="$VERSION"
