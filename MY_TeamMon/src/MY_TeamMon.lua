@@ -1730,17 +1730,51 @@ function D.OnCallMessage(szEvent, szContent, dwNpcID, szNpcName)
 				dwReceiverID, szReceiver = nil
 			end
 			if bInParty and content:find('{$team}', nil, true) then
-				local c = content
-				for _, vv in ipairs(team.GetTeamMemberList()) do
-					if string.find(szContent, c:gsub('{$team}', team.GetClientTeamMemberName(vv)), nil, true) and (v.szTarget == szNpcName or v.szTarget == '%') then -- hit
-						data = v
-						dwReceiverID = vv
-						szReceiver = team.GetClientTeamMemberName(vv)
+				if v.bReg then
+					-- 正则模式（带{$team}）：逆向排除，先遍历成员名，替换为空，若替换成功，说明命中，再将正则规则{$team}替换为空，匹配剩余的内容，如此只用一次正则，节约性能
+					local nHitMemberID, szHitMemberName, szProcessedContent
+					local tMembers = {}
+					-- 按名字长度降序排序，避免名字包含关系导致误判替换
+					for _, vv in ipairs(team.GetTeamMemberList()) do
+						tMembers[#tMembers + 1] = { dwID = vv, szName = team.GetClientTeamMemberName(vv) }
+					end
+					table.sort(tMembers, function(a, b) return #a.szName > #b.szName end)
+					-- 替换正则规则{$team}为空，并获取{$team}数量，决定后续成员名替换为空次数
+					local szPattern, nTeamCount = content:gsub('{$team}', '')
+					for _, member in ipairs(tMembers) do
+						local szReplaced = string.gsub(szContent, member.szName, '', nTeamCount)
+						if #szReplaced < #szContent then
+							nHitMemberID = member.dwID
+							szHitMemberName = member.szName
+							szProcessedContent = szReplaced
+							break
+						end
+					end
+					if nHitMemberID and szHitMemberName then
+						local res = {string.find(szProcessedContent, szPattern)}
+						if res[1] then
+							table.remove(res, 1)
+							table.remove(res, 1)
+							data = v
+							aBackreferences = res
+							dwReceiverID = nHitMemberID
+							szReceiver = szHitMemberName
+							break
+						end
+					end
+				else
+					local c = content
+					for _, vv in ipairs(team.GetTeamMemberList()) do
+						if string.find(szContent, c:gsub('{$team}', team.GetClientTeamMemberName(vv)), nil, true) and (v.szTarget == szNpcName or v.szTarget == '%') then -- hit
+							data = v
+							dwReceiverID = vv
+							szReceiver = team.GetClientTeamMemberName(vv)
+							break
+						end
+					end
+					if dwReceiverID and szReceiver then
 						break
 					end
-				end
-				if dwReceiverID and szReceiver then
-					break
 				end
 			elseif v.szTarget == szNpcName or v.szTarget == '%' then
 				if v.bReg then
