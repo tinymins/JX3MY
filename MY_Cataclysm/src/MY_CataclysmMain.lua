@@ -107,6 +107,8 @@ local function UpdateTeamMonData()
 						if data.bCheckLevel then
 							v.nLevel = data.nLevel
 						end
+						v.szDisplayName = v.szDisplayName or data.szDisplayName
+						v.szDisplayName = v.szDisplayName and X.RenderTemplateString(v.szDisplayName, nil, -1, false, false)
 						v.nIcon = data.nIcon
 						table.insert(aBuff, v)
 					end
