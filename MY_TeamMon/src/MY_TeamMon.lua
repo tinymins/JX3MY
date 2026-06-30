@@ -868,7 +868,7 @@ function D.CreateData(szEvent)
 				if v.szContent then
 					if v.szContent:find('{$me}') or v.szContent:find('{$team}') or v.bSearch or v.bReg then -- 具有通配符和搜索标记的数据不作 HIT 高速匹配策略考虑
 						table.insert(cache.OTHER, v)
-					elseif not cache.HIT[v.szContent] then -- 按照数据优先级顺序（地图＞地图组＞通用），同级按照下标先后顺序，只取第一个匹配结果
+					elseif not (cache.HIT[v.szContent] and cache.HIT[v.szContent][v.szTarget or 'sys']) then -- 按照数据优先级顺序（地图＞地图组＞通用），同级按照下标先后顺序，只取第一个匹配结果
 						cache.HIT[v.szContent] = cache.HIT[v.szContent] or {}
 						cache.HIT[v.szContent][v.szTarget or 'sys'] = v
 					end
