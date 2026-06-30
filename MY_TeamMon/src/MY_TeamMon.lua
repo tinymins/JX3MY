@@ -1064,7 +1064,7 @@ function D.OnBuff(dwOwner, bDelete, bCanCancel, dwBuffID, nCount, nBuffLevel, dw
 	if MY_TEAM_MON_SHIELDED_TOTAL then
 		return
 	end
-	if MY_TEAM_MON_SHIELDED_OTHER_PLAYER and X.IsPlayer(dwSkillSrcID) and dwSkillSrcID ~= MY_TEAM_MON_CORE_PLAYERID then
+	if MY_TEAM_MON_SHIELDED_OTHER_PLAYER and X.IsPlayer(dwSkillSrcID) and dwSkillSrcID ~= MY_TEAM_MON_CORE_PLAYERID and not X.IsTeammate(dwSkillSrcID) then
 		return
 	end
 	local szType = bCanCancel and 'BUFF' or 'DEBUFF'
