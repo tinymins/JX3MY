@@ -46,8 +46,9 @@ function X.GetDoodadLootMoney(dwDoodadID)
 		local scene = me and me.GetScene()
 		return scene and scene.GetLootMoney(dwDoodadID)
 	else
-		local doodad = X.GetDoodad(dwDoodadID)
-		return doodad and doodad.GetLootMoney()
+		local me = X.GetClientPlayer()
+		local scene = me and me.GetScene()
+		return scene and scene.GetLootMoney(dwDoodadID)
 	end
 end
 
@@ -61,8 +62,10 @@ function X.GetDoodadLootItemCount(dwDoodadID)
 		local tLoot = scene and scene.GetLootList(dwDoodadID)
 		return tLoot and tLoot.nItemCount or nil
 	else
-		local doodad = X.GetDoodad(dwDoodadID)
-		return doodad and doodad.GetItemListCount()
+		local me = X.GetClientPlayer()
+		local scene = me and me.GetScene()
+		local tLoot = scene and scene.GetLootList(dwDoodadID)
+		return tLoot and tLoot.nItemCount or nil
 	end
 end
 
@@ -83,9 +86,14 @@ function X.GetDoodadLootItem(dwDoodadID, nIndex)
 		end
 	else
 		local me = X.GetClientPlayer()
-		local doodad = X.GetDoodad(dwDoodadID)
-		if doodad then
-			return doodad.GetLootItem(nIndex - 1, me)
+		local scene = me and me.GetScene()
+		local tLoot = scene and scene.GetLootList(dwDoodadID)
+		local it = tLoot and tLoot[nIndex - 1]
+		if it then
+			local bNeedRoll = it.LootType == X.CONSTANT.LOOT_ITEM_TYPE.NEED_ROLL
+			local bDist = it.LootType == X.CONSTANT.LOOT_ITEM_TYPE.NEED_DISTRIBUTE
+			local bBidding = it.LootType == X.CONSTANT.LOOT_ITEM_TYPE.NEED_BIDDING
+			return it.Item, bNeedRoll, bDist, bBidding
 		end
 	end
 end
@@ -102,9 +110,10 @@ function X.DistributeDoodadItem(dwDoodadID, dwItemID, dwTargetPlayerID)
 			scene.DistributeItem(dwDoodadID, dwItemID, dwTargetPlayerID)
 		end
 	else
-		local doodad = X.GetDoodad(dwDoodadID)
-		if doodad then
-			doodad.DistributeItem(dwItemID, dwTargetPlayerID)
+		local me = X.GetClientPlayer()
+		local scene = me and me.GetScene()
+		if scene then
+			scene.DistributeItem(dwDoodadID, dwItemID, dwTargetPlayerID)
 		end
 	end
 end
@@ -120,9 +129,10 @@ function X.GetDoodadLooterList(dwDoodadID)
 			return scene.GetLooterList(dwDoodadID)
 		end
 	else
-		local doodad = X.GetDoodad(dwDoodadID)
-		if doodad then
-			return doodad.GetLooterList()
+		local me = X.GetClientPlayer()
+		local scene = me and me.GetScene()
+		if scene then
+			return scene.GetLooterList(dwDoodadID)
 		end
 	end
 end
