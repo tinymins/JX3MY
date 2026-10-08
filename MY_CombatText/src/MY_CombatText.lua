@@ -21,7 +21,7 @@ end
 --------------------------------------------------------------------------
 local SKILL_RESULT_TYPE = SKILL_RESULT_TYPE
 local GetSkill, Random = GetSkill, Random
-local Table_GetBuffName, Table_GetSkillName, Table_BuffIsVisible = Table_GetBuffName, Table_GetSkillName, Table_BuffIsVisible
+local Table_GetBuff, Table_GetBuffName, Table_GetSkillName, Table_BuffIsVisible = Table_GetBuff, Table_GetBuffName, Table_GetSkillName, Table_BuffIsVisible
 
 -- 战斗浮动文字设计思路
 --[[
@@ -1088,6 +1088,10 @@ function D.OnSkillBuff(dwCharacterID, bCanCancel, dwID, nLevel)
 		return
 	end
 	if not Table_BuffIsVisible(dwID, nLevel) then
+		return
+	end
+	local tBuff = Table_GetBuff(dwID, nLevel)
+	if tBuff and tBuff.bHideAddName and tBuff.bHideAddName ~= 0 then
 		return
 	end
 	local szBuffName = Table_GetBuffName(dwID, nLevel)
