@@ -1028,6 +1028,8 @@ function D.CountdownEvent(data, nClass, szSender, szReceiver, aBackreferences)
 					nIcon     = v.nIcon or data.nIcon or 340,
 					nFrame    = v.nFrame,
 					szContent = FilterCustomText(v.szName or data.szName, szSender, szReceiver, aBackreferences),
+					tVars     = v.tVars,
+					szTemplate = v.szName or data.szName,
 					nTime     = v.nTime,
 					nRefresh  = v.nRefresh,
 					bTalk     = v.bTeamChannel,

@@ -9,10 +9,13 @@ Github Action 自动化脚本
 
 
 # 引入自定义的打包发布模块和环境设置模块
+import subprocess
+
 from plib.publish import run
 
 
 def main() -> None:
+    subprocess.run(["lua", "tests/team_mon_compute.lua"], check=True)
     run("ci")
 
 
