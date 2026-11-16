@@ -1109,6 +1109,7 @@ globals = {
 	"GetSkillRecipeBaseInfo",
 	"GetMasterRecipeList",
 	"Lock_State",
+	"GetShop",
 	"GetShopItemID",
 	"GetShopItemBuyOtherInfo",
 	"GetShopItemReputeLevel",
