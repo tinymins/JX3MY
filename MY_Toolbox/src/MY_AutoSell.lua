@@ -113,6 +113,12 @@ RegisterCustomData('MY_AutoSell.tSellItem')
 RegisterCustomData('MY_AutoSell.tProtectItem')
 
 function D.SellItem(nNpcID, nShopID, dwBox, dwX, nCount, szReason, szName, nUiId)
+	if X.IS_CLASSIC then
+		local shopinfo = GetShop(nShopID)
+		if not shopinfo or shopinfo.dwNpcID == nil or shopinfo.dwNpcID ~= nNpcID then
+			return
+		end
+	end
 	local me = X.GetClientPlayer()
 	local item = X.GetInventoryItem(me, dwBox, dwX)
 	if not item or item.nUiId ~= nUiId then
@@ -220,9 +226,20 @@ end
 function D.CheckEnable()
 	if O.bEnable then
 		X.RegisterEvent('SHOP_OPENSHOP', 'MY_AutoSell', function()
-			local chk = Station.Lookup('Normal/ShopPanel/CheckBox_AutoSell')
-			local bIgnoreGray = chk and chk:IsCheckBoxChecked() or false
-			D.AutoSellItem(arg4, arg0, bIgnoreGray)
+			if X.IS_CLASSIC then
+				local shopinfo = GetShop(arg0)
+				if not shopinfo or shopinfo.dwNpcID == nil then
+					return
+				end
+				-- Portable shops use NPC ID 0, which is valid for SellItem.
+				local chk = Station.Lookup('Normal/ShopPanel/Wnd_Right/CheckBox_AutoSell')
+				local bIgnoreGray = chk and chk:IsCheckBoxChecked() or false
+				D.AutoSellItem(shopinfo.dwNpcID, arg0, bIgnoreGray)
+			else
+				local chk = Station.Lookup('Normal/ShopPanel/CheckBox_AutoSell')
+				local bIgnoreGray = chk and chk:IsCheckBoxChecked() or false
+				D.AutoSellItem(arg4, arg0, bIgnoreGray)
+			end
 		end)
 	else
 		X.RegisterEvent('SHOP_OPENSHOP', 'MY_AutoSell', false)
