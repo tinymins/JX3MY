@@ -18,6 +18,12 @@ local MACRO_ACTION_DATATYPE = {
 	['cast'] = 'SKILL',
 	['fcast'] = 'SKILL',
 }
+if X.IS_CLASSIC then
+	MACRO_ACTION_DATATYPE.castself = 'SKILL'
+	MACRO_ACTION_DATATYPE.fcastself = 'SKILL'
+	MACRO_ACTION_DATATYPE.casttarget = 'SKILL'
+	MACRO_ACTION_DATATYPE.fcasttarget = 'SKILL'
+end
 local MACRO_CONDITION_DATATYPE = {
 	['buff'] = 'BUFF',
 	['nobuff'] = 'BUFF',
@@ -94,6 +100,9 @@ function X.IsMacroValid(szMacro)
 				-- tbuff:流血
 				-- 校验【条件指令:条件指令参数(可选数值比较)】类型
 				local szJudge, szJudgeData = szSubCondition:match('^([a-zA-Z_]+)%s*%:%s*([^<>~=]+)%s*[<>~=]*%s*[0-9.]*$')
+				if not szJudge and X.IS_CLASSIC then
+					szJudge, szJudgeData = szSubCondition:match('^(skill_energy):([^<>~=]+)=max$')
+				end
 				if not szJudge then
 					szJudge, szJudgeData = szSubCondition:match('^([a-zA-Z_]+)%s*[<>~=]*%s*[0-9.%s]*$'), ''
 				end
@@ -119,7 +128,8 @@ function X.IsMacroValid(szMacro)
 						end
 						return false, 'UNKNOWN_CONDITION_BUFF', nLine, szErrMsg
 					end
-				elseif not szSubCondition:match('moon[<>=%s]+sun') and not szSubCondition:match('sun[<>=%s]+moon') then
+				elseif not szSubCondition:match('moon[<>=%s]+sun') and not szSubCondition:match('sun[<>=%s]+moon')
+					and not (X.IS_CLASSIC and (szSubCondition == 'moon~=sun' or szSubCondition == 'sun~=moon')) then
 					szJudge, szJudgeData = szSubCondition:match('^(last_skill)[=~%s]+([^<>=~]+)$')
 					if not szJudge then
 						local szErrMsg = _L('Unknown condition at line %d', nLine)
