@@ -86,6 +86,7 @@ local function ParseCountdown(szCountdown, szSender, szReceiver, aBackreferences
 	local aCountdown = MY_TeamMon.ParseCountdown(szCountdown)
 	if X.IsTable(aCountdown) then
 		for _, v in ipairs(aCountdown) do
+			v.szTemplate = v.szContent
 			v.szContent = FilterCustomText(v.szContent, szSender, szReceiver, aBackreferences)
 		end
 	end
@@ -108,13 +109,36 @@ local function CreateCountdown(nType, szKey, tParam, szSender, szReceiver, aBack
 	assert(type(tParam) == 'table', 'CreateCountdown failed!')
 	local tTime = {}
 	local nTime = GetTime()
+	local tVariables, szVariablesError, tConfig = aBackreferences, nil, tParam.tVars
+	if not (X.IsString(tParam.nTime) or (X.IsNumber(tParam.nTime) and tParam.nTime > 0)) then
+		tConfig = nil
+	end
+	if tConfig then
+		if not X.IsTable(tConfig) or type(tConfig.szUnavailable) ~= 'string' or tConfig.szUnavailable == '' then
+			X.OutputDebugMessage('[MY_TeamMon_Compute] Missing unavailable text.', X.DEBUG_LEVEL.ERROR)
+			return
+		end
+		tVariables, szVariablesError = MY_TeamMon_Compute.Evaluate(tConfig, aBackreferences)
+		if szVariablesError then
+			X.OutputDebugMessage('[MY_TeamMon_Compute] ' .. szVariablesError, X.DEBUG_LEVEL.ERROR)
+		end
+		if X.IsNumber(tParam.nTime) then
+			tParam.szContent = tVariables and FilterCustomText(tParam.szTemplate, szSender, szReceiver, tVariables)
+				or tConfig.szUnavailable
+		end
+	end
 	if X.IsNumber(tParam.nTime) then
 		tTime = {
 			nTime = tParam.nTime,
 			szContent = tParam.szContent,
 		}
 	elseif X.IsString(tParam.nTime) then
-		local aCountdown = ParseCountdown(tParam.nTime, szSender, szReceiver, aBackreferences)
+		local aCountdown = ParseCountdown(tParam.nTime, szSender, szReceiver, tVariables)
+		if aCountdown and tConfig and not tVariables then
+			for _, tPart in ipairs(aCountdown) do
+				tPart.szContent = tConfig.szUnavailable
+			end
+		end
 		if aCountdown then
 			tTime = aCountdown[1]
 			tParam.nTime = aCountdown
@@ -158,11 +182,64 @@ local function CreateCountdown(nType, szKey, tParam, szSender, szReceiver, aBack
 			return
 		end
 		ST_TIME_EXPIRE[nType][szKey] = nTime + (tParam.nRefresh or 0) * 1000
-		ST:ctor(nType, szKey, tParam):SetInfo(tTime, tParam.nIcon or 13):Switch(false)
+		local obj = ST:ctor(nType, szKey, tParam):SetInfo(tTime, tParam.nIcon or 13):Switch(false)
+		obj.ui.tVars = tConfig
+		obj.ui.tVarsContext = tConfig and { szSender, szReceiver, X.Clone(aBackreferences) }
+		obj.ui.szVarsTemplate = tParam.szTemplate
+		obj.ui.nVarsDirty = nil
+		obj.ui.szVarsError = szVariablesError
+	end
+end
+
+local function MarkVariablesDirty(dwBuffID)
+	for _, tTimers in pairs(ST_CACHE) do
+		for _, ui in pairs(tTimers) do
+			if ui:IsValid() and ui.tVars and ui.tVars.bUpdate == true
+			and (not dwBuffID or MY_TeamMon_Compute.WatchesBuff(ui.tVars, dwBuffID)) then
+				local nDebounce = ui.tVars.nDebounce
+				if type(nDebounce) ~= 'number' or not (nDebounce >= 50 and nDebounce <= 1000) then
+					nDebounce = 100
+				end
+				ui.nVarsDirty = ui.nVarsDirty or GetTime() + nDebounce
+			end
+		end
+	end
+end
+
+local function UpdateVariables(ui, nNow)
+	if not ui.nVarsDirty or ui.nVarsDirty > nNow then
+		return
+	end
+	ui.nVarsDirty = nil
+	local aContext = ui.tVarsContext
+	local tVariables, szError = MY_TeamMon_Compute.Evaluate(ui.tVars, aContext[3])
+	if szError and ui.szVarsError ~= szError then
+		X.OutputDebugMessage('[MY_TeamMon_Compute] ' .. szError, X.DEBUG_LEVEL.ERROR)
+	end
+	ui.szVarsError = szError
+	local function Render(szTemplate)
+		return tVariables and FilterCustomText(szTemplate, aContext[1], aContext[2], tVariables) or ui.tVars.szUnavailable
+	end
+	local szContent
+	if type(ui.countdown) == 'number' then
+		szContent = Render(ui.szVarsTemplate)
+	else
+		for _, tPart in ipairs(ui.countdown) do
+			tPart.szContent = Render(tPart.szTemplate)
+		end
+		szContent = ui.countdown[1].szContent
+	end
+	if ui.txt:GetText() ~= szContent then
+		ui.obj:SetInfo({ szContent = szContent })
 	end
 end
 
 function D.OnFrameCreate()
+	for _, szEvent in ipairs({ 'BUFF_UPDATE', 'PARTY_ADD_MEMBER', 'PARTY_DELETE_MEMBER', 'PARTY_DISBAND',
+		'PARTY_SET_MEMBER_ONLINE_FLAG', 'PLAYER_STATE_UPDATE', 'PLAYER_ENTER_SCENE', 'PLAYER_LEAVE_SCENE',
+		'MY_TEAM_MON_DATA_RELOAD' }) do
+		this:RegisterEvent(szEvent)
+	end
 	this:RegisterEvent('LOADING_END')
 	this:RegisterEvent('UI_SCALED')
 	this:RegisterEvent('ON_ENTER_CUSTOM_UI_MODE')
@@ -176,7 +253,26 @@ function D.OnFrameCreate()
 end
 
 function D.OnEvent(szEvent)
-	if szEvent == 'MY_TEAM_MON__SPELL_TIMER__CREATE' then
+	if szEvent == 'BUFF_UPDATE' then
+		if X.IsTeammate(arg0) or arg0 == X.GetClientPlayerID() then
+			MarkVariablesDirty(arg4)
+		end
+	elseif szEvent == 'PARTY_ADD_MEMBER' or szEvent == 'PARTY_DELETE_MEMBER' or szEvent == 'PARTY_DISBAND'
+	or szEvent == 'PARTY_SET_MEMBER_ONLINE_FLAG' or szEvent == 'PLAYER_STATE_UPDATE'
+	or szEvent == 'PLAYER_ENTER_SCENE' or szEvent == 'PLAYER_LEAVE_SCENE' then
+		MarkVariablesDirty()
+	elseif szEvent == 'MY_TEAM_MON_DATA_RELOAD' then
+		for nType, tTimers in pairs(ST_CACHE) do
+			for szKey, ui in pairs(tTimers) do
+				if ui.tVars then
+					if ui:IsValid() then
+						ui.obj:RemoveItem()
+					end
+					ST_TIME_EXPIRE[nType][szKey] = nil
+				end
+			end
+		end
+	elseif szEvent == 'MY_TEAM_MON__SPELL_TIMER__CREATE' then
 		CreateCountdown(arg0, arg1, arg2, arg3, arg4, arg5)
 	elseif szEvent == 'MY_TEAM_MON__SPELL_TIMER__DEL' then
 		local ui = ST_CACHE[arg0][arg1]
@@ -243,6 +339,7 @@ function D.OnFrameBreathe()
 	for k, v in pairs(ST_CACHE) do
 		for kk, vv in pairs(v) do
 			if vv:IsValid() then
+				UpdateVariables(vv, nNow)
 				if type(vv.countdown) == 'number' then
 					local nLeft  = vv.countdown - ((nNow - vv.nLeft) / 1000)
 					if nLeft >= 0 then
